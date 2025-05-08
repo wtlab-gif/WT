@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>FDP Feedback - AI in Blockchain</title>
+  <link rel="stylesheet" href="/style.css">
+  <script defer src="/script.js"></script>
+</head>
+<body>
+  <h1>Feedback Form: FDP on AI in Blockchain</h1>
+  <form id="feedbackForm" method="POST" action="/submit-feedback">
+    <label>Name:</label><br>
+    <input type="text" name="name" required><br><br>
+
+    <label>Email:</label><br>
+    <input type="email" name="email" required><br><br>
+
+    <label>Rating (1-5):</label><br>
+    <input type="number" name="rating" min="1" max="5" required><br><br>
+
+    <label>Comments:</label><br>
+    <textarea name="comments" required></textarea><br><br>
+
+    <button type="submit">Submit Feedback</button>
+  </form>
+</body>
+</html>

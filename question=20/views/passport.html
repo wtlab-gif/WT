@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Passport Application</title>
+  <script defer src="/script.js"></script>
+</head>
+<body>
+  <h1>Passport Application Form</h1>
+  <form id="passportForm" method="POST" action="/apply-passport">
+    <label>Full Name:</label><br>
+    <input type="text" name="fullname" required><br><br>
+
+    <label>Date of Birth:</label><br>
+    <input type="date" name="dob" required><br><br>
+
+    <label>Nationality:</label><br>
+    <input type="text" name="nationality" required><br><br>
+
+    <label>Email:</label><br>
+    <input type="email" name="email" required><br><br>
+
+    <label>Phone:</label><br>
+    <input type="text" name="phone" required><br><br>
+
+    <label>Address:</label><br>
+    <textarea name="address" required></textarea><br><br>
+
+    <button type="submit">Apply</button>
+  </form>
+</body>
+</html>

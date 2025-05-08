@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Electricity Bill Calculator</title>
+</head>
+<body>
+  <h2>Meter Reading Bill Calculator</h2>
+  <form id="meterForm">
+    <label>Starting Reading:</label><br>
+    <input type="number" id="start" required><br><br>
+
+    <label>Ending Reading:</label><br>
+    <input type="number" id="end" required><br><br>
+
+    <button type="submit">Calculate Bill</button>
+  </form>
+
+  <p id="result"></p>
+
+  <script>
+    document.getElementById('meterForm').addEventListener('submit', async function (e) {
+      e.preventDefault();
+      const start = parseFloat(document.getElementById('start').value);
+      const end = parseFloat(document.getElementById('end').value);
+      const result = document.getElementById('result');
+
+      // Input validation
+      if (end <= start) {
+        result.textContent = "Error: Ending reading must be greater than starting reading.";
+        return;
+      }
+
+      // Send GET request to server
+      const response = await fetch(`http://localhost:3000/calculate-bill?start=${start}&end=${end}`);
+      const data = await response.json();
+      result.textContent = `Total Bill Amount: ₹${data.bill}`;
+    });
+  </script>
+</body>
+</html>

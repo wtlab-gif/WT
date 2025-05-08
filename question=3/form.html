@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Student Registration</title>
+</head>
+<body>
+
+<h2>Student Registration Form</h2>
+
+<form id="registrationForm">
+  <label>Full Name:</label><br>
+  <input type="text" id="name" required><br><br>
+
+  <label>Email:</label><br>
+  <input type="email" id="email" required><br><br>
+
+  <label>Age:</label><br>
+  <input type="number" id="age" required><br><br>
+
+  <label>Course:</label><br>
+  <select id="course" required>
+    <option value="">--Select--</option>
+    <option value="Computer Science">Computer Science</option>
+    <option value="Mathematics">Mathematics</option>
+    <option value="Physics">Physics</option>
+  </select><br><br>
+
+  <button type="submit">Submit</button>
+</form>
+
+<script>
+  document.getElementById('registrationForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    const name = document.getElementById('name').value.trim();
+    const email = document.getElementById('email').value.trim();
+    const age = document.getElementById('age').value.trim();
+    const course = document.getElementById('course').value;
+
+    if (name === '' || email === '' || age === '' || course === '') {
+      alert("Please fill in all fields.");
+      return;
+    }
+
+    const data = {
+      name: name,
+      email: email,
+      age: parseInt(age),
+      course: course
+    };
+
+    fetch('http://localhost:3000/api/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(result => {
+      console.log("Server Response:", result);
+      alert("Registration successful!");
+    })
+    .catch(error => {
+      console.error("Error:", error);
+      alert("There was an error submitting the form.");
+    });
+
+    console.log("Form Submitted:", data);
+  });
+</script>
+
+</body>
+</html>

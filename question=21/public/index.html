@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Aadhar Application Form</title>
+</head>
+<body>
+  <h2>Apply for Aadhar Card</h2>
+  <form id="aadharForm">
+    <input type="text" id="fullName" placeholder="Full Name" required /><br><br>
+    <input type="date" id="dob" required /><br><br>
+    <select id="gender" required><br>
+      <option value="">Select Gender</option><br><br>
+      <option>Male</option>
+      <option>Female</option>
+      <option>Other</option>
+    </select><br><br>
+    <textarea id="address" placeholder="Address" required></textarea><br>
+    <input type="tel" id="phone" placeholder="Phone Number" required /><br><br>
+    <input type="email" id="email" placeholder="Email Address" required /><br><br>
+    <button type="submit">Submit Application</button>
+    <p id="message"></p>
+  </form>
+
+  <script>
+    document.getElementById('aadharForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const data = {
+        fullName: document.getElementById('fullName').value,
+        dob: document.getElementById('dob').value,
+        gender: document.getElementById('gender').value,
+        address: document.getElementById('address').value,
+        phone: document.getElementById('phone').value,
+        email: document.getElementById('email').value
+      };
+
+      const res = await fetch('/api/aadhar', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+
+      const result = await res.json();
+      document.getElementById('message').innerText = result.message || result.error;
+      if (res.ok) document.getElementById('aadharForm').reset();
+    });
+  </script>
+</body>
+</html>

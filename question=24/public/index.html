@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head><title>Movie Ticket Booking</title></head>
+<body>
+  <h2>Book a Movie Ticket</h2>
+  <form id="ticketForm">
+    Name: <input type="text" id="name" required><br>
+    Movie: <input type="text" id="movie" required><br>
+    Seats: <input type="number" id="seats" required><br>
+    <button type="submit">Book</button>
+  </form>
+
+  <h3>All Booked Tickets</h3>
+  <ul id="ticketList"></ul>
+
+  <script>
+    async function fetchTickets() {
+      const res = await fetch('/tickets');
+      const tickets = await res.json();
+      const list = document.getElementById('ticketList');
+      list.innerHTML = '';
+      tickets.forEach(ticket => {
+        const li = document.createElement('li');
+        li.textContent = `${ticket.name} booked "${ticket.movie}" - ${ticket.seats} seats`;
+        
+        // Update button
+        const updateBtn = document.createElement('button');
+        updateBtn.textContent = 'Edit';
+        updateBtn.onclick = async () => {
+          const newSeats = prompt('Enter new number of seats:');
+          if (newSeats) {
+            await fetch(`/tickets/${ticket._id}`, {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ seats: newSeats })
+            });
+            fetchTickets();
+          }
+        };
+
+        // Delete button
+        const deleteBtn = document.createElement('button');
+        deleteBtn.textContent = 'Cancel';
+        deleteBtn.onclick = async () => {
+          await fetch(`/tickets/${ticket._id}`, { method: 'DELETE' });
+          fetchTickets();
+        };
+
+        li.append(updateBtn, deleteBtn);
+        list.appendChild(li);
+      });
+    }
+
+    document.getElementById('ticketForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const name = document.getElementById('name').value;
+      const movie = document.getElementById('movie').value;
+      const seats = document.getElementById('seats').value;
+
+      await fetch('/tickets', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, movie, seats })
+      });
+
+      document.getElementById('ticketForm').reset();
+      fetchTickets();
+    });
+
+    fetchTickets(); // Initial load
+  </script>
+</body>
+</html>
