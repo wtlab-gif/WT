@@ -1,0 +1,808 @@
+1)Develop a website to fetch movie details using API integration. The front end must get the movie
+and year details from user and perform input validation using Java Script
+******************************
+
+<!DOCTYPE html>
+<html>
+<body>
+  <h3>Movie Search</h3>
+  <input id="title" placeholder="Title">
+  <input id="year" placeholder="Year">
+  <button onclick="getMovie()">Search</button>
+  <div id="result"></div>
+
+  <script>
+    function getMovie() {
+      const title = document.getElementById("title").value;
+      const year = document.getElementById("year").value;
+      const result = document.getElementById("result");
+
+      if (!title) return result.innerText = "Enter title";
+      if (year && !/^\d{4}$/.test(year)) return result.innerText = "Invalid year";
+
+      fetch(`https://www.omdbapi.com/?apikey=YOUR_API_KEY&t=${title}&y=${year}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.Response === "False") result.innerText = "Not found";
+          else result.innerHTML = `<b>${data.Title}</b> (${data.Year})<br>${data.Plot}<br><img src="${data.Poster}" width="150">`;
+        });
+    }
+  </script>
+</body>
+</html>
+-----------------------------------------------------------------
+2)Develop a website to integrate API for fetching random jokes and insert them into MongoDB
+collection using Webserver.
+***************************************
+const express = require("express");
+const fetch = require("node-fetch");
+const mongoose = require("mongoose");
+
+mongoose.connect("mongodb://localhost:27017/jokesDB");
+const Joke = mongoose.model("Joke", { setup: String, punchline: String });
+
+const app = express();
+
+app.get("/", (req, res) => {
+  res.send(`
+    <html><body>
+      <p id="setup"></p><p id="punch"></p>
+      <button onclick="getJoke()">Get Joke</button>
+      <script>
+        async function getJoke() {
+          const res = await fetch("/joke");
+          const j = await res.json();
+          document.getElementById("setup").innerText = j.setup;
+          document.getElementById("punch").innerText = j.punchline;
+        }
+      </script>
+    </body></html>
+  `);
+});
+
+app.get("/joke", async (req, res) => {
+  const r = await fetch("https://official-joke-api.appspot.com/random_joke");
+  const j = await r.json();
+  await Joke.create({ setup: j.setup, punchline: j.punchline });
+  res.json(j);
+});
+
+app.listen(3000, () => console.log("http://localhost:3000"));
+--------------------------------------------------------------------------------
+3)Develop a student registration form with good input validation using Java script and use HTTP
+POST method to send those details to the webserver and print the details in console.
+****************************************
+INDEX.HTML
+----------
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Student Registration</title>
+</head>
+<body>
+  <h3>Student Registration</h3>
+  <form method="POST" onsubmit="return validate()" action="/register">
+    Name: <input name="name" id="name"><br><br>
+    Email: <input name="email" id="email"><br><br>
+    Age: <input name="age" id="age"><br><br>
+    <input type="submit" value="Register">
+  </form>
+
+  <script>
+    function validate() {
+      const name = document.getElementById("name").value;
+      const email = document.getElementById("email").value;
+      const age = document.getElementById("age").value;
+
+      if (!name || !email || !age) {
+        alert("All fields are required");
+        return false;
+      }
+
+      if (!/^[\w.-]+@[\w.-]+\.\w{2,}$/.test(email)) {
+        alert("Enter a valid email");
+        return false;
+      }
+
+      if (isNaN(age) || age <= 0) {
+        alert("Enter a valid age");
+        return false;
+      }
+
+      return true;
+    }
+  </script>
+</body>
+</html>
+----
+
+SERVER.JS
+------
+const express = require("express");
+const app = express();
+const path = require("path");
+
+app.use(express.urlencoded({ extended: true }));
+
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "index.html"));
+});
+
+app.post("/register", (req, res) => {
+  console.log("Student Registered:", req.body);
+  res.send("Registration successful!");
+});
+
+app.listen(3000, () => console.log("Open: http://localhost:3000"));
+----------------------------------------------------------------------
+4) Design a front-end page for our college using React with minimum four routing components to
+display different departments. Also use hook to count the number of visitors for the web page.
+*************************************
+
+REACT---APP.JSX:
+====
+
+
+import React, { useState, useEffect } from "react";
+import { BrowserRouter, Routes, Route, Link } from "react-router-dom";
+
+function VisitorCounter() {
+  const [count, setCount] = useState(0);
+  useEffect(() => {
+    setCount(c => c + 1);
+  }, []);
+  return <p>Visitor Count: {count}</p>;
+}
+
+function Home() {
+  return (
+    <div>
+      <h2>Welcome to Our College</h2>
+      <VisitorCounter />
+    </div>
+  );
+}
+
+function CSE() { return <h3>Computer Science Department</h3>; }
+function ECE() { return <h3>Electronics Department</h3>; }
+function MECH() { return <h3>Mechanical Department</h3>; }
+function CIVIL() { return <h3>Civil Department</h3>; }
+
+export default function App() {
+  return (
+    <BrowserRouter>
+      <div>
+        <h1>Our College</h1>
+        <nav>
+          <Link to="/">Home</Link> |
+          <Link to="/cse">CSE</Link> |
+          <Link to="/ece">ECE</Link> |
+          <Link to="/mech">MECH</Link> |
+          <Link to="/civil">CIVIL</Link>
+        </nav>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/cse" element={<CSE />} />
+          <Route path="/ece" element={<ECE />} />
+          <Route path="/mech" element={<MECH />} />
+          <Route path="/civil" element={<CIVIL />} />
+        </Routes>
+      </div>
+    </BrowserRouter>
+  );
+}
+
+-------------------------------------------------------------------------------------
+
+5)Design a web application to get the employee details and web server to perform CRUD operations in
+the MongoDB.
+
+*******
+
+SERVER.JS
+--------
+const express = require("express");
+const mongoose = require("mongoose");
+const bodyParser = require("body-parser");
+const cors = require("cors");
+
+const app = express();
+const PORT = 5000;
+
+// Middleware
+app.use(cors());
+app.use(bodyParser.json());
+
+// MongoDB connection
+mongoose.connect("mongodb://localhost:27017/employeeDB", { useNewUrlParser: true, useUnifiedTopology: true })
+  .then(() => console.log("Connected to MongoDB"))
+  .catch(err => console.log(err));
+
+// Employee Schema
+const employeeSchema = new mongoose.Schema({
+  name: String,
+  position: String
+});
+
+// Employee Model
+const Employee = mongoose.model("Employee", employeeSchema);
+
+// Route to Get All Employees (GET)
+app.get("/employees", (req, res) => {
+  Employee.find()
+    .then(employees => res.json(employees))
+    .catch(err => res.status(400).json("Error: " + err));
+});
+
+// Route to Create Employee (POST)
+app.post("/employees", (req, res) => {
+  const newEmployee = new Employee(req.body);
+  newEmployee.save()
+    .then(employee => res.json(employee))
+    .catch(err => res.status(400).json("Error: " + err));
+});
+
+// Start the Server
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});
+
+
+========
+HTML:
+-----
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Employee CRUD</title>
+</head>
+<body>
+
+  <h1>Employee Management</h1>
+
+  <!-- Add Employee Form -->
+  <h2>Add Employee</h2>
+  <form id="employee-form">
+    <input type="text" id="name" placeholder="Name" required><br>
+    <input type="text" id="position" placeholder="Position" required><br>
+    <button type="submit">Add Employee</button>
+  </form>
+
+  <!-- Employee List -->
+  <h2>Employee List</h2>
+  <ul id="employee-list">
+    <!-- List will be populated here -->
+  </ul>
+
+  <script>
+    const apiUrl = "http://localhost:5000/employees";
+
+    // Fetch Employees from the server (GET)
+    function fetchEmployees() {
+      fetch(apiUrl)
+        .then(response => response.json())
+        .then(data => {
+          const employeeList = document.getElementById('employee-list');
+          employeeList.innerHTML = '';  // Clear existing list
+          data.forEach(employee => {
+            const listItem = document.createElement('li');
+            listItem.textContent = `${employee.name} - ${employee.position}`;
+            employeeList.appendChild(listItem);
+          });
+        })
+        .catch(error => console.log('Error:', error));
+    }
+
+    // Add new employee (POST)
+    document.getElementById('employee-form').addEventListener('submit', function(event) {
+      event.preventDefault();
+      
+      const newEmployee = {
+        name: document.getElementById('name').value,
+        position: document.getElementById('position').value
+      };
+
+      fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(newEmployee)
+      })
+      .then(response => response.json())
+      .then(() => {
+        fetchEmployees();  // Refresh employee list after adding
+        document.getElementById('employee-form').reset();  // Clear form fields
+      })
+      .catch(error => console.log('Error:', error));
+    });
+
+    // Fetch employees when the page loads
+    window.onload = fetchEmployees;
+  </script>
+
+</body>
+</html>
+--------------------------------------------------------------------------------------
+6)Design a web application to store and retrieve student details from the client web page to the
+MongoDB using NodeJS.
+****************
+
+
+SERVER.JS
+
+const express = require('express');
+const mongoose = require('mongoose');
+const bodyParser = require('body-parser');
+
+// Set up express app
+const app = express();
+app.use(bodyParser.json());
+
+// Connect to MongoDB
+mongoose.connect('mongodb://localhost/studentDB', { useNewUrlParser: true, useUnifiedTopology: true });
+
+// Student Schema
+const Student = mongoose.model('Student', { name: String, age: Number });
+
+// Get all students
+app.get('/students', (req, res) => {
+  Student.find().then(students => res.json(students));
+});
+
+// Add a new student
+app.post('/students', (req, res) => {
+  const student = new Student(req.body);
+  student.save().then(() => res.json(student));
+});
+
+// Start the server
+app.listen(5000, () => console.log('Server running on port 5000'));
+===============
+
+INDEX.HTML
+-----------
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><title>Student CRUD</title></head>
+<body>
+
+<h2>Add Student</h2>
+<form id="form">
+  <input id="name" placeholder="Name" required>
+  <input id="age" placeholder="Age" type="number" required>
+  <button type="submit">Add</button>
+</form>
+
+<h2>Students List</h2>
+<ul id="list"></ul>
+
+<script>
+  const apiUrl = 'http://localhost:5000/students';
+
+  // Fetch students
+  function loadStudents() {
+    fetch(apiUrl)
+      .then(res => res.json())
+      .then(data => {
+        const list = document.getElementById('list');
+        list.innerHTML = data.map(s => `<li>${s.name} - ${s.age}</li>`).join('');
+      });
+  }
+
+  // Handle form submission
+  document.getElementById('form').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const newStudent = { name: document.getElementById('name').value, age: document.getElementById('age').value };
+    fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(newStudent) })
+      .then(() => loadStudents());
+  });
+
+  // Load students on page load
+  window.onload = loadStudents;
+</script>
+
+</body>
+</html>
+-------------------------------------------------------------------------------------------
+
+7)Develop a website to integrate weather API to display the current weather of the location. The client
+page has to perform input validation for the location using Java Script.
+****************************
+
+INDEX.HTML
+-----------
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Weather App</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    input, button { padding: 10px; margin: 10px; }
+    #weather { margin-top: 20px; }
+  </style>
+</head>
+<body>
+
+  <h1>Weather App</h1>
+
+  <label for="city">Enter City Name:</label>
+  <input type="text" id="city" placeholder="City Name" required>
+  <button onclick="getWeather()">Get Weather</button>
+
+  <div id="weather"></div>
+
+  <script src="script.js"></script>
+
+</body>
+</html>
+==========
+SCRIPT.JS
+=---------
+const apiKey = 'YOUR_API_KEY';  // Replace with your OpenWeatherMap API key
+
+function getWeather() {
+  const city = document.getElementById('city').value;
+  
+  // Input validation: Check if the city name is empty
+  if (!city) {
+    alert("Please enter a city name!");
+    return;
+  }
+
+  // URL for the OpenWeatherMap API
+  const apiUrl = `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiKey}&units=metric`;
+
+  // Fetch the weather data from the API
+  fetch(apiUrl)
+    .then(response => response.json())
+    .then(data => {
+      if (data.cod === '404') {
+        alert("City not found, please try again.");
+      } else {
+        // Display the weather details
+        const weather = `
+          <h3>Weather in ${data.name}, ${data.sys.country}</h3>
+          <p>Temperature: ${data.main.temp}°C</p>
+          <p>Weather: ${data.weather[0].description}</p>
+          <p>Humidity: ${data.main.humidity}%</p>
+          <p>Wind Speed: ${data.wind.speed} m/s</p>
+        `;
+        document.getElementById('weather').innerHTML = weather;
+      }
+    })
+    .catch(error => {
+      console.error('Error:', error);
+      alert('Failed to fetch weather data. Please try again.');
+    });
+}
+-------------------------------------------------------------------------------------------
+
+8. Develop a website to integrate Animal facts API to display facts about any animal provided by user.
+The client page has to perform input validation for the animal’s name and also show error if no such
+animal name exists using Java Script.
+***************************************
+INDEX.HTML
+----------
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Animal Facts</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    input, button { padding: 10px; margin: 10px; }
+    #fact { margin-top: 20px; }
+  </style>
+</head>
+<body>
+
+  <h1>Animal Facts</h1>
+
+  <label for="animal">Enter Animal Name:</label>
+  <input type="text" id="animal" placeholder="Animal Name" required>
+  <button onclick="getAnimalFact()">Get Fact</button>
+
+  <div id="fact"></div>
+
+  <script src="script.js"></script>
+
+</body>
+</html>
+=================
+SCRIPT.JS
+---------
+
+
+
+// Animal Facts API URL
+const apiUrl = 'https://some-animal-facts-api.com/api/v1/facts/';
+
+function getAnimalFact() {
+  const animal = document.getElementById('animal').value.trim();
+
+  // Input validation: Check if the animal name is empty
+  if (!animal) {
+    alert("Please enter an animal name!");
+    return;
+  }
+
+  // Format URL based on animal input
+  const formattedUrl = `${apiUrl}${animal.toLowerCase()}`;
+
+  // Fetch animal facts from the API
+  fetch(formattedUrl)
+    .then(response => {
+      if (!response.ok) {
+        throw new Error("Animal not found");
+      }
+      return response.json();
+    })
+    .then(data => {
+      // Display the fact
+      const fact = data.fact;
+      document.getElementById('fact').innerHTML = `<p>Fact about ${animal}: ${fact}</p>`;
+    })
+    .catch(error => {
+      // Display error if animal not found
+      document.getElementById('fact').innerHTML = `<p>Error: ${error.message}</p>`;
+    });
+}
+------------------------------------------------------------------------------------------
+9. Develop a React front-end page that fetches details of books and animals by integrating respective
+APIs in different components using routing.
+****************************
+APP.JS
+=====
+
+
+import React from 'react';
+import { BrowserRouter as Router, Route, Switch, Link } from 'react-router-dom';
+import BookDetails from './BookDetails';
+import AnimalFacts from './AnimalFacts';
+
+function App() {
+  return (
+    <Router>
+      <div>
+        <h1>Simple React API Integration</h1>
+        <nav>
+          <Link to="/books">Books</Link> | 
+          <Link to="/animals">Animals</Link>
+        </nav>
+        <Switch>
+          <Route path="/books" component={BookDetails} />
+          <Route path="/animals" component={AnimalFacts} />
+        </Switch>
+      </div>
+    </Router>
+  );
+}
+
+export default App;
+==================
+BookDetails.js (Book API Component)
+-------------------
+
+import React, { useState, useEffect } from 'react';
+
+function BookDetails() {
+  const [books, setBooks] = useState([]);
+
+  useEffect(() => {
+    fetch('https://api.example.com/books')  // Replace with actual Book API URL
+      .then(response => response.json())
+      .then(data => setBooks(data));
+  }, []);
+
+  return (
+    <div>
+      <h2>Books List</h2>
+      {books.length > 0 ? (
+        <ul>
+          {books.map(book => (
+            <li key={book.id}>
+              <strong>{book.title}</strong> by {book.author}
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p>Loading books...</p>
+      )}
+    </div>
+  );
+}
+
+export default BookDetails;
+========================
+AnimalFacts.js (Animal Facts API Component)
+--------------------
+import React, { useState, useEffect } from 'react';
+
+function AnimalFacts() {
+  const [fact, setFact] = useState('');
+
+  useEffect(() => {
+    fetch('https://some-animal-facts-api.com/api/facts/cat')  // Replace with actual Animal Facts API URL
+      .then(response => response.json())
+      .then(data => setFact(data.fact));
+  }, []);
+
+  return (
+    <div>
+      <h2>Animal Fact</h2>
+      {fact ? <p>{fact}</p> : <p>Loading fact...</p>}
+    </div>
+  );
+}
+
+export default AnimalFacts;
+=========================
+ index.jS
+--------------
+import React from 'react';
+import ReactDOM from 'react-dom';
+import App from './App';
+import './index.css';
+
+ReactDOM.render(<App />, document.getElementById('root'));
+
+------------------------------------------------------------------------------------------
+
+index.html 
+-----------
+
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Student CRUD App</title>
+</head>
+<body>
+
+  <h1>Student CRUD Operations</h1>
+
+  <!-- Form to Add Student -->
+  <h2>Add Student</h2>
+  <form id="studentForm">
+    <label for="name">Name: </label><input type="text" id="name" required><br>
+    <label for="age">Age: </label><input type="number" id="age" required><br>
+    <label for="course">Course: </label><input type="text" id="course" required><br>
+    <button type="submit">Add Student</button>
+  </form>
+
+  <!-- Display All Students -->
+  <h2>All Students</h2>
+  <ul id="studentsList"></ul>
+
+  <script>
+    // Handle form submission to add a new student
+    document.getElementById('studentForm').addEventListener('submit', function(event) {
+      event.preventDefault();
+      
+      const name = document.getElementById('name').value;
+      const age = document.getElementById('age').value;
+      const course = document.getElementById('course').value;
+
+      // Send POST request to add the student
+      fetch('/addStudent', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, age, course })
+      })
+      .then(response => response.json())
+      .then(data => {
+        alert(data.message);
+        fetchStudents();  // Refresh the students list after adding a student
+      })
+      .catch(error => console.error('Error:', error));
+    });
+
+    // Fetch all students and display them
+    function fetchStudents() {
+      fetch('/students')
+        .then(response => response.json())
+        .then(students => {
+          const studentsList = document.getElementById('studentsList');
+          studentsList.innerHTML = '';
+          students.forEach(student => {
+            const li = document.createElement('li');
+            li.textContent = `${student.name}, Age: ${student.age}, Course: ${student.course}`;
+            studentsList.appendChild(li);
+          });
+        })
+        .catch(error => console.error('Error:', error));
+    }
+
+    // Call the function to load students on page load
+    fetchStudents();
+  </script>
+
+</body>
+</html>
+=============
+
+10. Develop a web application to perform CRUD operations on MongoDB using NodeJS with details
+shown or got from the front-end client using HTTP GET and POST.
+**********************************************
+ server.js 
+---------------
+
+// Import dependencies
+const express = require('express');
+const mongoose = require('mongoose');
+const bodyParser = require('body-parser');
+
+// Initialize the Express app
+const app = express();
+
+// Middleware
+app.use(bodyParser.json());
+app.use(express.static('public'));
+
+// Connect to MongoDB (Replace with your own MongoDB URI if necessary)
+mongoose.connect('mongodb://localhost:27017/students', { useNewUrlParser: true, useUnifiedTopology: true })
+  .then(() => console.log('MongoDB connected...'))
+  .catch(err => console.log(err));
+
+// Create a Schema and Model for Student
+const studentSchema = new mongoose.Schema({
+  name: String,
+  age: Number,
+  course: String
+});
+
+const Student = mongoose.model('Student', studentSchema);
+
+// POST endpoint to add a new student
+app.post('/addStudent', (req, res) => {
+  const newStudent = new Student({
+    name: req.body.name,
+    age: req.body.age,
+    course: req.body.course
+  });
+
+  newStudent.save()
+    .then(() => res.json({ message: 'Student added successfully!' }))
+    .catch(err => res.status(400).json({ message: 'Error adding student', error: err }));
+});
+
+// GET endpoint to fetch all students
+app.get('/students', (req, res) => {
+  Student.find()
+    .then(students => res.json(students))
+    .catch(err => res.status(400).json({ message: 'Error fetching students', error: err }));
+});
+
+// Start the server
+const PORT = 3000;
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+------------------------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+-
