@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Employee Details</title>
+</head>
+<body>
+  <h1>Employee Management</h1>
+  <form id="employeeForm">
+    <input type="hidden" id="employeeId" />
+    <input type="text" id="name" placeholder="Name" required />
+    <input type="text" id="position" placeholder="Position" required />
+    <input type="number" id="salary" placeholder="Salary" required />
+    <button type="button" onclick="addOrUpdateEmployee()">Add/Update Employee</button>
+  </form>
+  <button onclick="getEmployees()">Get Employees</button>
+  <div id="employeeList"></div>
+
+  <script>
+    const apiUrl = 'http://localhost:3000/employees';
+
+    async function addOrUpdateEmployee() {
+      const id = document.getElementById('employeeId').value;
+      const name = document.getElementById('name').value;
+      const position = document.getElementById('position').value;
+      const salary = document.getElementById('salary').value;
+
+      const method = id ? 'PUT' : 'POST';
+      const url = id ? `${apiUrl}/${id}` : apiUrl;
+
+      await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, position, salary }),
+      });
+      alert(id ? 'Employee updated!' : 'Employee added!');
+      document.getElementById('employeeForm').reset();
+      getEmployees();
+    }
+
+    async function getEmployees() {
+      const response = await fetch(apiUrl);
+      const employees = await response.json();
+      const list = employees.map(emp => `
+        <p>
+          ${emp.name} - ${emp.position} - $${emp.salary}
+          <button onclick="editEmployee('${emp._id}', '${emp.name}', '${emp.position}', ${emp.salary})">Edit</button>
+          <button onclick="deleteEmployee('${emp._id}')">Delete</button>
+        </p>
+      `).join('');
+      document.getElementById('employeeList').innerHTML = list;
+    }
+
+    function editEmployee(id, name, position, salary) {
+      document.getElementById('employeeId').value = id;
+      document.getElementById('name').value = name;
+      document.getElementById('position').value = position;
+      document.getElementById('salary').value = salary;
+    }
+
+    async function deleteEmployee(id) {
+      await fetch(`${apiUrl}/${id}`, { method: 'DELETE' });
+      alert('Employee deleted!');
+      getEmployees();
+    }
+  </script>
+</body>
+</html>
